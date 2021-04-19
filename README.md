@@ -52,78 +52,96 @@ return [
 Configuration
 -------------
 
-First, you must register your application at https://developer.spotify.com/dashboard/applications to get the 
-`client_id` and `client_secret`. You should also register the `redirect_uri`.
+First, you must register your application at https://developer.spotify.com/dashboard/applications to obtain the 
+`client_id` and `client_secret`.
 
-For configuration create a new `config/packages/calliostro_spotify_web_api.yaml` file:
+If you want to access user-related endpoints, the user must grant access to your application. Spotify provides OAuth 2.0
+for this purpose. You need to register the `redirect_uri` in the Spotify dashboard. For the following example, you would
+add `https://127.0.0.1:8000/callback/` to the whitelist addresses.
+
+For configuration, create a new `config/packages/calliostro_spotify_web_api.yaml`  file. Here is an example:
 
 ```yaml
 # config/packages/calliostro_spotify_web_api.yaml
 calliostro_spotify_web_api:
 
   # Your Client ID
-  client_id: ~ # Required
+  client_id:            '' # Required
 
   # Your Client Secret
-  client_secret: ~ # Required
+  client_secret:        '' # Required
 
   # Address to redirect to after authentication success OR failure
-  redirect_uri: ''
+  redirect_uri:         '' # Example: 'https://127.0.0.1:8000/callback/'
 
   # Service ID of the token provider that provides the user's access token
-  token_provider: calliostro_spotify_web_api.token_provider
+  token_provider:       calliostro_spotify_web_api.token_provider
 ```
 
 
 Usage
 -----
 
-### Spotify Web API
-
 This bundle provides a single service for communication with Spotify Web API, which you can autowire by using the
-`SpotifyWebAPI` type-hint:
+`SpotifyWebAPI` and `Session` type-hint:
 
 ```php
 // src/Controller/SomeController.php
 
-use SpotifyWebAPI\SpotifyWebAPI;
-// ...
-
-class SomeController
-{
-    public function index(SpotifyWebAPI $api)
-    {
-        $search = $api->search('Thriller', 'album');
-
-        var_dump($search);
-
-        // ...
-    }
-}
-```
-
-### Spotify Session
-
-You can also autowire the `Session` service with this type-hint. For example, to refresh the access token:
-
-```php
-// src/Controller/SomeOtherController.php
+namespace App\Controller;
 
 use SpotifyWebAPI\Session;
-// ...
+use SpotifyWebAPI\SpotifyWebAPI;
+use SpotifyWebAPI\SpotifyWebAPIAuthException;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
 
-class SomeOtherController
+class SomeController extends AbstractController
 {
-    public function index(Session $session)
-    {
-        $session->refreshAccessToken(
-            $session->getRefreshToken()
-        );
+    private $api;
+    private $session;
 
-        // ...
+    public function __construct(SpotifyWebAPI $api, Session $session)
+    {
+        $this->api = $api;
+        $this->session = $session;
+    }
+
+    /**
+     * @Route("/callback")
+     */
+    public function callbackFromSpotify(Request $request): Response
+    {
+        try {
+            $this->session->requestAccessToken($request->query->get('code'));
+        } catch (SpotifyWebAPIAuthException $e) {
+            return $this->redirectToRoute('some_redirect');
+        }
+
+        $this->api->setAccessToken($this->session->getAccessToken());
+        $me = $this->api->me();
+
+        return new Response(var_export($me, false), 200, ['Content-Type' => 'text/plain']);
+    }
+
+    /**
+     * @Route("/redirect", name="some_redirect")
+     */
+    public function redirectToSpotify(): Response
+    {
+        $options = [
+            'scope' => [
+                'user-read-email',
+            ],
+        ];
+
+        return $this->redirect($this->session->getAuthorizeUrl($options));
     }
 }
 ```
+
 
 Documentation
 -------------
