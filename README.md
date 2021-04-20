@@ -71,6 +71,13 @@ calliostro_spotify_web_api:
   # Your Client Secret
   client_secret:        '' # Required
 
+  # Options for SpotifyWebAPI client
+  # https://github.com/jwilsson/spotify-web-api-php/blob/main/docs/examples/setting-options.md
+  options:
+    auto_refresh:         false
+    auto_retry:           false
+    return_assoc:         false
+
   # Address to redirect to after authentication success OR failure
   redirect_uri:         '' # Example: 'https://127.0.0.1:8000/callback/'
 

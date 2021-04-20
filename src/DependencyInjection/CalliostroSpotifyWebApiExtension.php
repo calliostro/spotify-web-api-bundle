@@ -27,6 +27,7 @@ final class CalliostroSpotifyWebApiExtension extends Extension
             ->replaceArgument(0, new Reference('calliostro_spotify_web_api.session'));
 
         $container->getDefinition('calliostro_spotify_web_api')
-            ->replaceArgument(0, new Reference($config['token_provider']));
+            ->replaceArgument(0, new Reference($config['token_provider']))
+            ->replaceArgument(1, $config['options']);
     }
 }

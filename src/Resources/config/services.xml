@@ -18,6 +18,7 @@
         <service id="calliostro_spotify_web_api" class="SpotifyWebAPI\SpotifyWebAPI" public="true">
             <factory class="Calliostro\SpotifyWebApiBundle\SpotifyWebApiFactory" method="factory" />
             <argument />
+            <argument />
         </service>
 
         <service id="SpotifyWebAPI\Session" alias="calliostro_spotify_web_api.session" public="false" />
