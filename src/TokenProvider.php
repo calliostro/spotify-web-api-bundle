@@ -2,13 +2,13 @@
 
 namespace Calliostro\SpotifyWebApiBundle;
 
-use SpotifyWebAPI;
+use SpotifyWebAPI\Session;
 
 final class TokenProvider implements TokenProviderInterface
 {
     private $session;
 
-    public function __construct(SpotifyWebAPI\Session $session)
+    public function __construct(Session $session)
     {
         $this->session = $session;
     }
