@@ -85,6 +85,35 @@ Usage
 This bundle provides a single service for communication with Spotify Web API, which you can autowire by using the
 `SpotifyWebAPI` and `Session` type-hint:
 
+
+### Client Credentials
+
+This is the simpler option if no user-related endpoints are required.
+
+```php
+// src/Controller/SomeController.php
+
+use SpotifyWebAPI\SpotifyWebAPI;
+// ...
+
+class SomeController
+{
+    public function index(SpotifyWebAPI $api)
+    {
+        $search = $api->search('Thriller', 'album');
+
+        var_dump($search);
+
+        // ...
+    }
+}
+```
+
+### Authorization Code
+
+If you want to access a Spotify user's profile or data, you must first redirect the user to Spotify's approval page.
+Then you can start the session.
+
 ```php
 // src/Controller/SomeController.php
 
@@ -141,6 +170,9 @@ class SomeController extends AbstractController
     }
 }
 ```
+
+Don't forget to set `redirect_uri` in the configuration file and whitelist it on Spotify.
+
 
 
 Documentation
