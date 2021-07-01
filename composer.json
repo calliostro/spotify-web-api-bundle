@@ -1,10 +1,10 @@
 {
     "name": "calliostro/spotify-web-api-bundle",
-    "description": "Spotify Web API client for PHP >=7.2.5 and Symfony 5",
+    "description": "Spotify Web API client for PHP 7.3 or 8.0 and Symfony 5",
     "type": "symfony-bundle",
     "require": {
-        "php": ">=7.2.5",
-        "jwilsson/spotify-web-api-php": "^4.3",
+        "php": "^7.3 || ^8.0",
+        "jwilsson/spotify-web-api-php": "^5.0",
         "symfony/config": "^5.0",
         "symfony/dependency-injection": "^5.0",
         "symfony/http-kernel": "^5.0"
