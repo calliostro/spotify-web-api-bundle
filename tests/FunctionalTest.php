@@ -10,7 +10,7 @@ use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel;
 
-class FunctionalTest extends TestCase
+final class FunctionalTest extends TestCase
 {
     public function testServiceWiring(): void
     {
@@ -54,7 +54,7 @@ class CalliostroSpotifyWebApiTestingKernel extends Kernel
         });
     }
 
-    public function getCacheDir()
+    public function getCacheDir(): string
     {
         return $this->getProjectDir() . '/var/cache/'.$this->environment.'/'.spl_object_hash($this);
     }

@@ -1,12 +1,12 @@
 Spotify Web API Bundle
 ======================
 
-[![Build Status](https://api.travis-ci.com/calliostro/spotify-web-api-bundle.svg)](https://www.travis-ci.com/github/calliostro/spotify-web-api-bundle)
+[![Build Status](https://app.travis-ci.com/calliostro/spotify-web-api-bundle.svg?branch=main)](https://www.travis-ci.com/github/calliostro/spotify-web-api-bundle)
 [![Version](https://poser.pugx.org/calliostro/spotify-web-api-bundle/version)](//packagist.org/packages/calliostro/spotify-web-api-bundle)
 [![License](https://poser.pugx.org/calliostro/spotify-web-api-bundle/license)](//packagist.org/packages/calliostro/spotify-web-api-bundle)
 
 This bundle provides a simple integration of [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php)
-into Symfony 5.
+into Symfony 5 or Symfony 6.
 
 
 Installation

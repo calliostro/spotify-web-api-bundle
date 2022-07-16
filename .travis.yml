@@ -14,6 +14,8 @@ matrix:
   fast_finish: true
   include:
     # Minimum supported dependencies with the latest and oldest PHP version
+    - php: 8.1
+      env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER=disabled=1"
     - php: 8.0
       env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER=disabled=1"
     # Minimum PHP 7.4 / Symfony 5 throws "require(): read of xxx bytes failed with errno=13 Permission denied" when
@@ -24,15 +26,17 @@ matrix:
       env: COMPOSER_FLAGS="--prefer-stable --prefer-lowest" SYMFONY_DEPRECATIONS_HELPER="disabled=1"
 
       # Test the latest stable release
-    - php: 7.3
-      env: SYMFONY_DEPRECATIONS_HELPER="max[direct]=0"
-    - php: 7.4
-      env: SYMFONY_DEPRECATIONS_HELPER="max[direct]=0"
+    - php: 8.1
+      env: COVERAGE=true PHPUNIT_FLAGS="-v --coverage-text"
     - php: 8.0
       env: COVERAGE=true PHPUNIT_FLAGS="-v --coverage-text"
+    - php: 7.4
+      env: SYMFONY_DEPRECATIONS_HELPER="max[direct]=0"
+    - php: 7.3
+      env: SYMFONY_DEPRECATIONS_HELPER="max[direct]=0"
 
       # Latest commit to master
-    - php: 8.0
+    - php: 8.1
       env: STABILITY="dev"
 
   allow_failures:
