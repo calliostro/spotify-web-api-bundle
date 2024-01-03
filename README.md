@@ -6,7 +6,7 @@ Spotify Web API Bundle
 [![License](https://poser.pugx.org/calliostro/spotify-web-api-bundle/license)](//packagist.org/packages/calliostro/spotify-web-api-bundle)
 
 This bundle provides a simple integration of [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php)
-into Symfony 5 or Symfony 6.
+into Symfony 5, Symfony 6 and Symfony 7.
 
 
 Installation
