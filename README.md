@@ -1,7 +1,6 @@
 Spotify Web API Bundle
 ======================
 
-[![Build Status](https://app.travis-ci.com/calliostro/spotify-web-api-bundle.svg?branch=main)](https://www.travis-ci.com/github/calliostro/spotify-web-api-bundle)
 [![Version](https://poser.pugx.org/calliostro/spotify-web-api-bundle/version)](//packagist.org/packages/calliostro/spotify-web-api-bundle)
 [![License](https://poser.pugx.org/calliostro/spotify-web-api-bundle/license)](//packagist.org/packages/calliostro/spotify-web-api-bundle)
 
