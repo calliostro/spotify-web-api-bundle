@@ -19,7 +19,7 @@ Make sure Composer is installed globally, as explained in the
 Open a command console, enter your project directory and execute:
 
 ```console
-$ composer require calliostro/spotify-web-api-bundle
+composer require calliostro/spotify-web-api-bundle
 ```
 
 ### Applications that don't use Symfony Flex
@@ -30,7 +30,7 @@ Open a command console, enter your project directory and execute the
 following command to download the latest stable version of this bundle:
 
 ```console
-$ composer require calliostro/spotify-web-api-bundle
+composer require calliostro/spotify-web-api-bundle
 ```
 
 #### Step 2: Enable the Bundle
