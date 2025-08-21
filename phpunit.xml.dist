@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.1/phpunit.xsd"
-         backupGlobals="false"
-         colors="true"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.5/phpunit.xsd"
          bootstrap="./vendor/autoload.php"
+         colors="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerErrors="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         executionOrder="random"
+         resolveDependencies="true"
+         cacheDirectory=".phpunit.cache"
 >
     <php>
         <ini name="error_reporting" value="-1" />
@@ -16,9 +22,9 @@
             <directory suffix="Test.php">./tests</directory>
         </testsuite>
     </testsuites>
-    <filter>
-        <whitelist>
+    <source>
+        <include>
             <directory>./src</directory>
-        </whitelist>
-    </filter>
+        </include>
+    </source>
 </phpunit>

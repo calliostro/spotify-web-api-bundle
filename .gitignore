@@ -1,10 +1,14 @@
+# Composer
+/vendor/
 composer.lock
 
+# Symfony var (cache, logs, sessions)
 /var/
-/vendor/
 
 ###> symfony/phpunit-bridge ###
 .phpunit
 .phpunit.result.cache
+.phpunit.cache/
 /phpunit.xml
+/tests/cache/
 ###< symfony/phpunit-bridge ###
