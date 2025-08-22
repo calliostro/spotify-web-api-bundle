@@ -5,11 +5,11 @@
 [![Version](https://poser.pugx.org/calliostro/spotify-web-api-bundle/version)](https://packagist.org/packages/calliostro/spotify-web-api-bundle)
 [![License](https://poser.pugx.org/calliostro/spotify-web-api-bundle/license)](https://packagist.org/packages/calliostro/spotify-web-api-bundle)
 
-> 🚀 **Easy integration of [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php) into Symfony 6.4 & 7!**
+ > 🚀 **Easy integration of [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php) into Symfony 6.4, 7 & 8!**
 
 ## ✨ Features
 
-- Simple integration with Symfony 6.4 & 7
+- Simple integration with Symfony 6.4, 7 & 8
 - Supports Client Credentials & Authorization Code flows
 - Autowire Spotify API services
 - Customizable token provider
@@ -49,6 +49,8 @@ return [
     Calliostro\SpotifyWebApiBundle\CalliostroSpotifyWebApiBundle::class => ['all' => true],
 ];
 ```
+
+> **Supports Symfony 6.4, 7.x and 8.x!**
 
 ## ⚙️ Configuration
 
@@ -184,6 +186,14 @@ class SpotifyController extends AbstractController
 See [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php) for documentation of the SpotifyWebAPI service.
 
 See [Spotify's Web API](https://developer.spotify.com/documentation/) full API documentation.
+
+---
+
+### ⚡ Supported Symfony Versions
+
+- **Symfony 6.4 (LTS)**
+- **Symfony 7.x**
+- **Symfony 8.x**
 
 ## 🤝 Contributing
 
