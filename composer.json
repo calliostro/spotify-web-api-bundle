@@ -1,7 +1,27 @@
 {
     "name": "calliostro/spotify-web-api-bundle",
-    "description": "Spotify Web API client for Symfony 6.4, Symfony 7 and Symfony 8",
+    "description": "Symfony bundle for the Spotify Web API — streaming, music data & integration made easy",
     "type": "symfony-bundle",
+    "keywords": [
+        "symfony-bundle",
+        "symfony",
+        "php",
+        "spotify",
+        "spotify-api",
+        "music",
+        "api-client",
+        "web-api",
+        "audio",
+        "streaming"
+    ],
+    "homepage": "https://github.com/calliostro/spotify-web-api-bundle",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "calliostro",
+            "email": "calliostro@gmail.com"
+        }
+    ],
     "require": {
         "php": "^8.1",
         "jwilsson/spotify-web-api-php": "^6.0",
@@ -22,14 +42,7 @@
             "Calliostro\\SpotifyWebApiBundle\\Tests\\": "tests/"
         }
     },
-    "scripts":{
+    "scripts": {
         "test": "vendor/bin/simple-phpunit"
-    },
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "calliostro",
-            "email": "calliostro@gmail.com"
-        }
-    ]
+    }
 }
