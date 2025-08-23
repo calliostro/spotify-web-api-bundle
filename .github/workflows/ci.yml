@@ -1,0 +1,160 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Core PHP version testing
+          - php: '8.1'
+            allowed-to-fail: false
+          - php: '8.2'
+            allowed-to-fail: false
+          - php: '8.3'
+            allowed-to-fail: false
+          - php: '8.4'
+            allowed-to-fail: false
+            
+          # Symfony 6.4 LTS compatibility
+          - php: '8.2'
+            symfony-version: '^6.4'
+            allowed-to-fail: false
+          - php: '8.3'
+            symfony-version: '^6.4'
+            allowed-to-fail: false
+          - php: '8.4'
+            symfony-version: '^6.4'
+            allowed-to-fail: false
+            
+          # Symfony 7.x current versions
+          - php: '8.2'
+            symfony-version: '^7.0'
+            allowed-to-fail: false
+          - php: '8.3'
+            symfony-version: '^7.0'
+            allowed-to-fail: false
+          - php: '8.2'
+            symfony-version: '^7.1'
+            allowed-to-fail: false
+          - php: '8.3'
+            symfony-version: '^7.1'
+            allowed-to-fail: false
+          - php: '8.3'
+            symfony-version: '^7.2'
+            allowed-to-fail: false
+          - php: '8.3'
+            symfony-version: '^7.3'
+            allowed-to-fail: false
+            
+          # Future releases (November 2025) - PHP 8.5 + Symfony 8.0
+          - php: '8.5'
+            symfony-version: '^8.0'
+            stability: 'dev'
+            allowed-to-fail: true
+            
+          # Additional future compatibility tests
+          - php: '8.4'
+            symfony-version: '^8.0'
+            stability: 'dev'
+            allowed-to-fail: true
+            
+          # Development stability test
+          - php: '8.4'
+            stability: 'dev'
+            allowed-to-fail: true
+
+    name: "PHP ${{ matrix.php }}${{ matrix.symfony-version && format(' | Symfony {0}', matrix.symfony-version) || '' }}${{ matrix.composer-flags && format(' | {0}', matrix.composer-flags) || '' }}${{ matrix.stability && format(' | {0}', matrix.stability) || '' }}"
+    
+    continue-on-error: ${{ matrix.allowed-to-fail }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: json, mbstring, tokenizer
+          coverage: none
+          tools: composer:v2
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Configure stability
+        if: matrix.stability
+        run: |
+          composer config minimum-stability ${{ matrix.stability }}
+          composer config prefer-stable true
+
+      - name: Configure Symfony version
+        if: matrix.symfony-version
+        run: |
+          composer require --no-update \
+            symfony/config:${{ matrix.symfony-version }} \
+            symfony/dependency-injection:${{ matrix.symfony-version }} \
+            symfony/http-kernel:${{ matrix.symfony-version }} \
+            symfony/phpunit-bridge:${{ matrix.symfony-version }}
+
+      - name: Remove composer.lock
+        run: rm -f composer.lock
+
+      - name: Install dependencies
+        run: composer update ${{ matrix.composer-flags }} --prefer-dist --no-interaction --no-progress
+
+      - name: Validate composer.json
+        run: composer validate --strict --no-check-lock
+
+      - name: Run tests
+        run: ./vendor/bin/simple-phpunit -v
+
+  code-quality:
+    runs-on: ubuntu-latest
+    name: Code Quality Checks
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: json, mbstring, tokenizer
+          coverage: none
+          tools: composer:v2
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
