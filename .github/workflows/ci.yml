@@ -23,6 +23,9 @@ jobs:
       matrix:
         include:
           # Symfony 6.4 LTS compatibility
+          - php: '8.1'
+            symfony-version: '6.4.*'
+            allowed-to-fail: false
           - php: '8.2'
             symfony-version: '6.4.*'
             allowed-to-fail: false
