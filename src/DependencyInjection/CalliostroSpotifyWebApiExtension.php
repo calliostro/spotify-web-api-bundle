@@ -18,16 +18,23 @@ final class CalliostroSpotifyWebApiExtension extends Extension
         $configuration = $this->getConfiguration($configs, $container);
         $config = $this->processConfiguration($configuration, $configs);
 
+        // Set arguments instead of replacing them since services.php doesn't define them
         $container->getDefinition('calliostro_spotify_web_api.session')
-            ->replaceArgument(0, $config['client_id'])
-            ->replaceArgument(1, $config['client_secret'])
-            ->replaceArgument(2, $config['redirect_uri']);
+            ->setArguments([
+                $config['client_id'],
+                $config['client_secret'],
+                $config['redirect_uri'],
+            ]);
 
         $container->getDefinition('calliostro_spotify_web_api.token_provider')
-            ->replaceArgument(0, new Reference('calliostro_spotify_web_api.session'));
+            ->setArguments([
+                new Reference('calliostro_spotify_web_api.session'),
+            ]);
 
         $container->getDefinition('calliostro_spotify_web_api')
-            ->replaceArgument(0, new Reference($config['token_provider']))
-            ->replaceArgument(1, $config['options']);
+            ->setArguments([
+                new Reference($config['token_provider']),
+                $config['options'],
+            ]);
     }
 }

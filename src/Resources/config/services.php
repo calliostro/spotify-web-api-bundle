@@ -10,26 +10,17 @@ use SpotifyWebAPI\SpotifyWebAPI;
 return static function (ContainerConfigurator $configurator): void {
     $services = $configurator->services();
 
+    // Session service - arguments will be set by the extension
     $services->set('calliostro_spotify_web_api.session', Session::class)
-        ->public()
-        ->args([
-            null, // client_id - set by extension
-            null, // client_secret - set by extension
-            null, // redirect_uri - set by extension
-        ]);
+        ->public();
 
-    $services->set('calliostro_spotify_web_api.token_provider', TokenProvider::class)
-        ->args([
-            null, // session - set by extension
-        ]);
+    // Token provider - arguments will be set by the extension
+    $services->set('calliostro_spotify_web_api.token_provider', TokenProvider::class);
 
+    // Main Spotify Web API service - arguments will be set by the extension
     $services->set('calliostro_spotify_web_api', SpotifyWebAPI::class)
         ->public()
-        ->factory([SpotifyWebApiFactory::class, 'factory'])
-        ->args([
-            null, // token_provider - set by extension
-            null, // options - set by extension
-        ]);
+        ->factory([SpotifyWebApiFactory::class, 'factory']);
 
     // Aliases for autowiring
     $services->alias(Session::class, 'calliostro_spotify_web_api.session');
