@@ -2,9 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [ master, main ]
+    branches:
+      - 'main'
+      - 'legacy/*'
+      - 'feature/*'
+      - 'hotfix/*'
+      - 'release/*'
   pull_request:
-    branches: [ master, main ]
+    branches:
+      - 'main'
+      - 'legacy/*'
+  workflow_dispatch:
 
 jobs:
   test:
@@ -14,65 +22,63 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Core PHP version testing
-          - php: '8.1'
-            allowed-to-fail: false
-          - php: '8.2'
-            allowed-to-fail: false
-          - php: '8.3'
-            allowed-to-fail: false
-          - php: '8.4'
-            allowed-to-fail: false
-            
           # Symfony 6.4 LTS compatibility
+          - php: '8.1'
+            symfony-version: '6.4.*'
+            allowed-to-fail: false
           - php: '8.2'
-            symfony-version: '^6.4'
+            symfony-version: '6.4.*'
             allowed-to-fail: false
           - php: '8.3'
-            symfony-version: '^6.4'
+            symfony-version: '6.4.*'
             allowed-to-fail: false
           - php: '8.4'
-            symfony-version: '^6.4'
+            symfony-version: '6.4.*'
             allowed-to-fail: false
             
           # Symfony 7.x current versions
           - php: '8.2'
-            symfony-version: '^7.0'
+            symfony-version: '7.0.*'
             allowed-to-fail: false
           - php: '8.3'
-            symfony-version: '^7.0'
+            symfony-version: '7.0.*'
             allowed-to-fail: false
-          - php: '8.2'
-            symfony-version: '^7.1'
-            allowed-to-fail: false
-          - php: '8.3'
-            symfony-version: '^7.1'
+          - php: '8.4'
+            symfony-version: '7.0.*'
             allowed-to-fail: false
           - php: '8.3'
-            symfony-version: '^7.2'
+            symfony-version: '7.1.*'
             allowed-to-fail: false
-          - php: '8.3'
-            symfony-version: '^7.3'
+          - php: '8.4'
+            symfony-version: '7.1.*'
+            allowed-to-fail: false
+          - php: '8.4'
+            symfony-version: '7.2.*'
+            allowed-to-fail: false
+          - php: '8.4'
+            symfony-version: '7.3.*'
+            allowed-to-fail: false
+          - php: '8.4'
+            symfony-version: '7.4.*'
             allowed-to-fail: false
             
-          # Future releases (November 2025) - PHP 8.5 + Symfony 8.0
+          # Symfony 8.0 - Requires PHP 8.4+
+          - php: '8.4'
+            symfony-version: '8.0.*'
+            allowed-to-fail: false
+            
+          # PHP 8.5 with various Symfony versions
           - php: '8.5'
-            symfony-version: '^8.0'
-            stability: 'dev'
-            allowed-to-fail: true
-            
-          # Additional future compatibility tests
-          - php: '8.4'
-            symfony-version: '^8.0'
-            stability: 'dev'
-            allowed-to-fail: true
-            
-          # Development stability test
-          - php: '8.4'
-            stability: 'dev'
-            allowed-to-fail: true
+            symfony-version: '7.3.*'
+            allowed-to-fail: false
+          - php: '8.5'
+            symfony-version: '7.4.*'
+            allowed-to-fail: false
+          - php: '8.5'
+            symfony-version: '8.0.*'
+            allowed-to-fail: false
 
-    name: "PHP ${{ matrix.php }}${{ matrix.symfony-version && format(' | Symfony {0}', matrix.symfony-version) || '' }}${{ matrix.composer-flags && format(' | {0}', matrix.composer-flags) || '' }}${{ matrix.stability && format(' | {0}', matrix.stability) || '' }}"
+    name: "PHP ${{ matrix.php }}${{ matrix.symfony-version && format(' | Symfony {0}', matrix.symfony-version) || '' }}"
     
     continue-on-error: ${{ matrix.allowed-to-fail }}
     
@@ -99,12 +105,6 @@ jobs:
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
 
-      - name: Configure stability
-        if: matrix.stability
-        run: |
-          composer config minimum-stability ${{ matrix.stability }}
-          composer config prefer-stable true
-
       - name: Configure Symfony version
         if: matrix.symfony-version
         run: |
@@ -118,7 +118,7 @@ jobs:
         run: rm -f composer.lock
 
       - name: Install dependencies
-        run: composer update ${{ matrix.composer-flags }} --prefer-dist --no-interaction --no-progress
+        run: composer update --prefer-dist --no-interaction --no-progress
 
       - name: Validate composer.json
         run: composer validate --strict --no-check-lock
