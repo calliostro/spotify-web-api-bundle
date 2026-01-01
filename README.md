@@ -10,6 +10,7 @@
 ## ✨ Features
 
 - Simple integration with Symfony 6.4, 7 & 8
+- Supports [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php) v6 & v7
 - Supports Client Credentials & Authorization Code flows
 - Autowire Spotify API services
 - Customizable token provider
@@ -54,7 +55,7 @@ return [
 
 ## ⚙️ Configuration
 
-First, you must register your application at https://developer.spotify.com/dashboard/applications to obtain the `client_id` and `client_secret`.
+First, you must register your application at <https://developer.spotify.com/dashboard/applications> to obtain the `client_id` and `client_secret`.
 
 If you want to access user-related endpoints, the user must grant access to your application. Spotify provides OAuth 2.0 for this purpose. You need to register the `redirect_uri` in the Spotify dashboard. For the following example, you would add `https://127.0.0.1:8000/callback/` to the allowlist addresses.
 
@@ -202,9 +203,11 @@ Implemented a missing feature? You can request it. And creating a pull request i
 ---
 
 ## 🏁 Quick Start
+
 1. Install the bundle with Composer
 2. Configure your Spotify credentials
 3. Autowire the service and start using the API!
 
 ## 💬 Support
+
 For questions or help, feel free to open an issue or reach out! 😊
