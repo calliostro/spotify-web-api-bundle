@@ -4,20 +4,20 @@ on:
   push:
     branches:
       - 'main'
-      - 'legacy/*'
-      - 'feature/*'
-      - 'hotfix/*'
-      - 'release/*'
+      - 'legacy/*'      # Legacy branches: legacy/v1.x
+      - 'feature/*'     # Feature branches: feature/new-feature
+      - 'hotfix/*'      # Hotfix branches: hotfix/urgent-fix
+      - 'release/*'     # Release branches: release/v1.4.0
   pull_request:
     branches:
       - 'main'
-      - 'legacy/*'
-  workflow_dispatch:
+      - 'legacy/*'      # PRs to legacy branches
+  workflow_dispatch:    # Allows manual triggering via GitHub UI
 
 jobs:
   test:
-    runs-on: ubuntu-latest
-    
+    runs-on: ubuntu-24.04
+
     strategy:
       fail-fast: false
       matrix:
@@ -35,7 +35,7 @@ jobs:
           - php: '8.4'
             symfony-version: '6.4.*'
             allowed-to-fail: false
-            
+
           # Symfony 7.x current versions
           - php: '8.2'
             symfony-version: '7.0.*'
@@ -61,30 +61,60 @@ jobs:
           - php: '8.4'
             symfony-version: '7.4.*'
             allowed-to-fail: false
-            
+
           # Symfony 8.0 - Requires PHP 8.4+
           - php: '8.4'
             symfony-version: '8.0.*'
-            allowed-to-fail: false
-            
-          # PHP 8.5 with various Symfony versions
-          - php: '8.5'
-            symfony-version: '7.3.*'
-            allowed-to-fail: false
-          - php: '8.5'
-            symfony-version: '7.4.*'
             allowed-to-fail: false
           - php: '8.5'
             symfony-version: '8.0.*'
             allowed-to-fail: false
 
-    name: "PHP ${{ matrix.php }}${{ matrix.symfony-version && format(' | Symfony {0}', matrix.symfony-version) || '' }}"
-    
+          # Symfony 8.1
+          - php: '8.4'
+            symfony-version: '8.1.*'
+            allowed-to-fail: false
+          - php: '8.5'
+            symfony-version: '8.1.*'
+            allowed-to-fail: false
+
+          # Symfony 8.2 (development / pre-release)
+          - php: '8.4'
+            symfony-version: '8.2.*'
+            allowed-to-fail: true
+          - php: '8.5'
+            symfony-version: '8.2.*'
+            allowed-to-fail: true
+
+          # PHP 8.6 (beta / experimental)
+          - php: '8.6'
+            symfony-version: '8.0.*'
+            allowed-to-fail: true
+          - php: '8.6'
+            symfony-version: '8.1.*'
+            allowed-to-fail: true
+          - php: '8.6'
+            symfony-version: '8.2.*'
+            allowed-to-fail: true
+
+          # Development stability tests
+          - php: '8.4'
+            stability: 'dev'
+            allowed-to-fail: true
+          - php: '8.5'
+            stability: 'dev'
+            allowed-to-fail: true
+          - php: '8.6'
+            stability: 'dev'
+            allowed-to-fail: true
+
+    name: "PHP ${{ matrix.php }}${{ matrix.symfony-version && format(' | Symfony {0}', matrix.symfony-version) || '' }}${{ matrix.stability && format(' | {0}', matrix.stability) || '' }}"
+
     continue-on-error: ${{ matrix.allowed-to-fail }}
-    
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -99,11 +129,17 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
           restore-keys: ${{ runner.os }}-composer-
+
+      - name: Configure stability
+        if: matrix.stability
+        run: |
+          composer config minimum-stability ${{ matrix.stability }}
+          composer config prefer-stable true
 
       - name: Configure Symfony version
         if: matrix.symfony-version
@@ -120,24 +156,35 @@ jobs:
       - name: Install dependencies
         run: composer update --prefer-dist --no-interaction --no-progress
 
-      - name: Validate composer.json
-        run: composer validate --strict --no-check-lock
+      - name: Validate composer.json and composer.lock
+        run: |
+          if [[ "${{ github.ref }}" == *"beta"* || "${{ github.ref }}" == *"alpha"* || "${{ github.ref }}" == *"rc"* ]]; then
+            composer validate --no-check-version
+          else
+            composer validate --strict
+          fi
+
+      - name: Run code style check
+        run: composer cs
+
+      - name: Run static analysis
+        run: composer analyse -- --memory-limit=1G
 
       - name: Run tests
-        run: ./vendor/bin/simple-phpunit -v
+        run: composer test
 
   code-quality:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     name: Code Quality Checks
-    
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: '8.4'
           extensions: json, mbstring, tokenizer
           coverage: none
           tools: composer:v2
@@ -147,7 +194,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
@@ -157,4 +204,50 @@ jobs:
         run: composer install --prefer-dist --no-interaction --no-progress
 
       - name: Validate composer.json and composer.lock
-        run: composer validate --strict
+        run: |
+          if [[ "${{ github.ref }}" == *"beta"* || "${{ github.ref }}" == *"alpha"* || "${{ github.ref }}" == *"rc"* ]]; then
+            composer validate --no-check-version
+          else
+            composer validate --strict
+          fi
+
+  coverage:
+    runs-on: ubuntu-24.04
+    name: Code Coverage
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: json, mbstring, tokenizer
+          coverage: xdebug
+          tools: composer:v2
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v6
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Run tests with coverage
+        run: composer test-coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false

@@ -1,0 +1,15 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    tmpDir: .phpunit.cache/phpstan
+    treatPhpDocTypesAsCertain: false
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        - identifier: method.alreadyNarrowedType
+        - identifier: function.alreadyNarrowedType
+        - identifier: missingType.generics
+        -
+            message: '#^Call to an undefined method Symfony\\Component\\Config\\Definition\\Builder\\NodeDefinition\:\:children\(\)\.$#'
+            identifier: method.notFound
+            path: src/DependencyInjection/Configuration.php

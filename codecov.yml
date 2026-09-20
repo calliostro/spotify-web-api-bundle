@@ -1,0 +1,9 @@
+coverage:
+  status:
+    project:
+      default:
+        branches:
+          - main
+          - legacy/*
+          - hotfix/*
+          - release/*

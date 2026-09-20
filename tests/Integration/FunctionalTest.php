@@ -1,6 +1,8 @@
 <?php
 
-namespace Calliostro\SpotifyWebApiBundle\Tests;
+declare(strict_types=1);
+
+namespace Calliostro\SpotifyWebApiBundle\Tests\Integration;
 
 use Calliostro\SpotifyWebApiBundle\CalliostroSpotifyWebApiBundle;
 use Calliostro\SpotifyWebApiBundle\TokenProviderInterface;
@@ -22,19 +24,18 @@ final class FunctionalTest extends TestCase
         $kernel->boot();
         $container = $kernel->getContainer();
 
-        $SpotifyWebApi = $container->get('calliostro_spotify_web_api');
-        $this->assertInstanceOf(SpotifyWebAPI::class, $SpotifyWebApi);
+        $spotifyWebApi = $container->get('calliostro_spotify_web_api');
+        $this->assertInstanceOf(SpotifyWebAPI::class, $spotifyWebApi);
     }
 }
 
 class CalliostroSpotifyWebApiTestingKernel extends Kernel
 {
-    private $calliostroSpotifyWebApiConfig;
-
-    public function __construct(array $calliostroSpotifyWebApiConfig = [])
+    /**
+     * @param array<string, mixed> $calliostroSpotifyWebApiConfig
+     */
+    public function __construct(private readonly array $calliostroSpotifyWebApiConfig = [])
     {
-        $this->calliostroSpotifyWebApiConfig = $calliostroSpotifyWebApiConfig;
-
         parent::__construct('test', true);
     }
 
@@ -56,7 +57,7 @@ class CalliostroSpotifyWebApiTestingKernel extends Kernel
 
     public function getCacheDir(): string
     {
-        return $this->getProjectDir() . '/var/cache/'.$this->environment.'/'.spl_object_hash($this);
+        return $this->getProjectDir() . '/var/cache/' . $this->environment . '/' . spl_object_hash($this);
     }
 }
 

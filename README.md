@@ -1,123 +1,89 @@
+# Spotify Web API Bundle for Symfony
 
-# 🎵 Spotify Web API Bundle
-
-[![CI](https://github.com/calliostro/spotify-web-api-bundle/workflows/CI/badge.svg)](https://github.com/calliostro/spotify-web-api-bundle/actions)
-[![Version](https://poser.pugx.org/calliostro/spotify-web-api-bundle/version)](https://packagist.org/packages/calliostro/spotify-web-api-bundle)
+[![Package Version](https://img.shields.io/packagist/v/calliostro/spotify-web-api-bundle.svg)](https://packagist.org/packages/calliostro/spotify-web-api-bundle)
+[![Total Downloads](https://img.shields.io/packagist/dt/calliostro/spotify-web-api-bundle.svg)](https://packagist.org/packages/calliostro/spotify-web-api-bundle)
 [![License](https://poser.pugx.org/calliostro/spotify-web-api-bundle/license)](https://packagist.org/packages/calliostro/spotify-web-api-bundle)
+[![PHP Version](https://img.shields.io/badge/php-%5E8.1-blue.svg)](https://php.net)
+[![CI](https://github.com/calliostro/spotify-web-api-bundle/actions/workflows/ci.yml/badge.svg)](https://github.com/calliostro/spotify-web-api-bundle/actions/workflows/ci.yml)
+[![Code Coverage](https://codecov.io/gh/calliostro/spotify-web-api-bundle/graph/badge.svg)](https://codecov.io/gh/calliostro/spotify-web-api-bundle)
+[![PHPStan Level](https://img.shields.io/badge/PHPStan-level%208-brightgreen.svg)](https://phpstan.org/)
+[![Code Style](https://img.shields.io/badge/code%20style-PSR12-brightgreen.svg)](https://github.com/FriendsOfPHP/PHP-CS-Fixer)
 
- > 🚀 **Easy integration of [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php) into Symfony 6.4, 7 & 8!**
-
-## ✨ Features
-
-- Simple integration with Symfony 6.4, 7 & 8
-- Supports [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php) v6 & v7
-- Supports Client Credentials & Authorization Code flows
-- Autowire Spotify API services
-- Customizable token provider
-- Easy configuration
+A Symfony bundle integrating [`jwilsson/spotify-web-api-php`](https://github.com/jwilsson/spotify-web-api-php) into your Symfony application. Provides dependency injection, autowiring, customizable token management, and support for Client Credentials & Authorization Code flows for PHP 8.1+ and Symfony 6.4, 7.x, and 8.x.
 
 ## 📦 Installation
 
-Make sure Composer is installed globally, as explained in the [installation chapter](https://getcomposer.org/doc/00-intro.md) of the Composer documentation.
+Install via Composer:
 
-### ⚡ Applications that use Symfony Flex
-
-Open a command console, enter your project directory and execute:
-
-```console
+```bash
 composer require calliostro/spotify-web-api-bundle
 ```
 
-### 🛠️ Applications that don't use Symfony Flex
-
-#### Step 1: Download the Bundle
-
-Open a command console, enter your project directory and execute the following command to download the latest stable version of this bundle:
-
-```console
-composer require calliostro/spotify-web-api-bundle
-```
-
-#### Step 2: Enable the Bundle
-
-Then, enable the bundle by adding it to the list of registered bundles in the `config/bundles.php` file of your project:
-
-```php
-// config/bundles.php
-
-return [
-    // ...
-    Calliostro\SpotifyWebApiBundle\CalliostroSpotifyWebApiBundle::class => ['all' => true],
-];
-```
-
-> **Supports Symfony 6.4, 7.x and 8.x!**
+---
 
 ## ⚙️ Configuration
 
-First, you must register your application at <https://developer.spotify.com/dashboard/applications> to obtain the `client_id` and `client_secret`.
+Register your application on the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/applications) to obtain your `client_id` and `client_secret`.
 
-If you want to access user-related endpoints, the user must grant access to your application. Spotify provides OAuth 2.0 for this purpose. You need to register the `redirect_uri` in the Spotify dashboard. For the following example, you would add `https://127.0.0.1:8000/callback/` to the allowlist addresses.
-
-For configuration, create a new `config/packages/calliostro_spotify_web_api.yaml` file. Here is an example:
+Configure the bundle in `config/packages/calliostro_spotify_web_api.yaml`:
 
 ```yaml
-# config/packages/calliostro_spotify_web_api.yaml
 calliostro_spotify_web_api:
-
-    # Your Client ID
-    client_id:            '' # Required
+    # Your Client ID from the Spotify Developer Dashboard
+    client_id: '%env(SPOTIFY_CLIENT_ID)%'
 
     # Your Client Secret
-    client_secret:        '' # Required
+    client_secret: '%env(SPOTIFY_CLIENT_SECRET)%'
 
-    # Options for SpotifyWebAPI client
-    # https://github.com/jwilsson/spotify-web-api-php/blob/main/docs/examples/setting-options.md
+    # Address to redirect to after authentication success OR failure (required for Authorization Code flow)
+    redirect_uri: '%env(SPOTIFY_REDIRECT_URI)%'
+
+    # Optional: Client options for jwilsson/spotify-web-api-php
     options:
-        auto_refresh:     false
-        auto_retry:       false
-        return_assoc:     false
+        auto_refresh: false
+        auto_retry: false
+        return_assoc: false
 
-    # Address to redirect to after authentication success OR failure
-    redirect_uri:         '' # Example: 'https://127.0.0.1:8000/callback/'
-
-    # Service ID of the token provider that provides the user's access token
-    token_provider:       calliostro_spotify_web_api.token_provider
+    # Optional: Custom token provider service (defaults to built-in Client Credentials TokenProvider)
+    # token_provider: calliostro_spotify_web_api.token_provider
 ```
 
-## 🎬 Usage
+> [!NOTE]
+> If you are using the Authorization Code flow, make sure to allowlist your `redirect_uri` (e.g. `https://127.0.0.1:8000/callback/`) in your Spotify Developer App settings.
 
-This bundle provides a single service for communication with Spotify Web API, which you can autowire by using the `SpotifyWebAPI` and `Session` type-hint:
+---
 
-### 🔑 Client Credentials
+## 🚀 Quick Start
 
-This is the simpler option if no user-related endpoints are required.
+### 1. Client Credentials Flow (Machine-to-Machine)
+
+For public data endpoints (searching tracks, getting artist info, browsing playlists), inject `SpotifyWebAPI` directly into your controllers or services. The built-in token provider automatically requests a Client Credentials token:
 
 ```php
-// src/Controller/SomeController.php
+<?php
+
+namespace App\Controller;
 
 use SpotifyWebAPI\SpotifyWebAPI;
-// ...
+use Symfony\Component\HttpFoundation\JsonResponse;
 
-class SomeController
+final class MusicController
 {
-    public function index(SpotifyWebAPI $api)
+    public function search(SpotifyWebAPI $api): JsonResponse
     {
-        $search = $api->search('Thriller', 'album');
+        $results = $api->search('Billie Eilish', 'artist');
 
-        var_dump($search);
-
-        // ...
+        return new JsonResponse($results);
     }
 }
 ```
 
-### 🧑‍💻 Authorization Code
+### 2. Authorization Code Flow (User Data)
 
-If you want to access a Spotify user's profile or data, you must first redirect the user to Spotify's approval page. Then you can start the session.
+To access private user data (playlists, saved tracks, top artists), inject both `SpotifyWebAPI` and `Session`:
 
 ```php
-// src/Controller/SpotifyController.php
+<?php
 
 namespace App\Controller;
 
@@ -125,89 +91,109 @@ use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
 use SpotifyWebAPI\SpotifyWebAPIAuthException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
-class SpotifyController extends AbstractController
+final class SpotifyController extends AbstractController
 {
     public function __construct(
-        private SpotifyWebAPI $api,
-        private Session $session
-    ) {}
-
-    #[Route('/', name: 'home')]
-    public function index(): Response
-    {
-        return new Response('
-            <h1>Spotify Web API Demo</h1>
-            <p>Welcome to the Spotify Web API Bundle demonstration!</p>
-            <p><a href="/authorize">Click here to authorize with Spotify</a></p>
-        ', 200, ['Content-Type' => 'text/html']);
+        private readonly SpotifyWebAPI $api,
+        private readonly Session $session,
+    ) {
     }
 
-    #[Route('/callback')]
-    public function callback(Request $request): Response
-    {
-        try {
-            $this->session->requestAccessToken($request->query->getString('code'));
-        } catch (SpotifyWebAPIAuthException) {
-            return $this->redirectToRoute('authorize');
-        }
-
-        $this->api->setAccessToken($this->session->getAccessToken());
-        $me = $this->api->me();
-
-        return new Response('
-            <h1>Spotify Authorization Successful!</h1>
-            <p>Welcome, ' . htmlspecialchars($me->display_name ?? 'Spotify User') . '!</p>
-            <pre>' . htmlspecialchars(var_export($me, true)) . '</pre>
-            <p><a href="/">Back to Home</a></p>
-        ', 200, ['Content-Type' => 'text/html']);
-    }
-
-    #[Route('/authorize', name: 'authorize')]
-    public function authorize(): Response
+    #[Route('/authorize', name: 'spotify_authorize')]
+    public function authorize(): RedirectResponse
     {
         $options = [
             'scope' => [
                 'user-read-email',
+                'user-read-private',
+                'playlist-read-private',
             ],
         ];
 
         return $this->redirect($this->session->getAuthorizeUrl($options));
     }
+
+    #[Route('/callback', name: 'spotify_callback')]
+    public function callback(Request $request): Response
+    {
+        $code = $request->query->getString('code');
+
+        try {
+            $this->session->requestAccessToken($code);
+        } catch (SpotifyWebAPIAuthException) {
+            return $this->redirectToRoute('spotify_authorize');
+        }
+
+        $this->api->setAccessToken($this->session->getAccessToken());
+        $user = $this->api->me();
+
+        return new Response(sprintf('<h1>Hello, %s!</h1>', htmlspecialchars($user->display_name ?? 'Spotify User')));
+    }
 }
 ```
 
-> ⚠️ **Remember to set `redirect_uri` in the configuration file and allowlist it on Spotify!**
+---
 
-## 📚 Documentation
+## ✨ Key Features
 
-See [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php) for documentation of the SpotifyWebAPI service.
-
-See [Spotify's Web API](https://developer.spotify.com/documentation/) full API documentation.
+- **Seamless Autowiring** – Type-hint `SpotifyWebAPI` and `Session` directly in your services and controllers.
+- **Dual Flow Support** – Ready out of the box for both Client Credentials and Authorization Code flows.
+- **Custom Token Providers** – Implement `TokenProviderInterface` to plug in your own token storage (Redis, database, session).
+- **Client Options** – Easily toggle `auto_refresh`, `auto_retry`, and `return_assoc` via YAML configuration.
+- **Type Safety & IDE Support** – PHP 8.1+ types, strict types, and PHPStan Level 8 static analysis.
+- **Symfony Native** – Full compatibility with Symfony 6.4 LTS, 7.x, and 8.x.
 
 ---
 
-### ⚡ Supported Symfony Versions
+## 📋 Requirements
 
-- **Symfony 6.4 (LTS)**
-- **Symfony 7.x**
-- **Symfony 8.x**
+- **PHP** `^8.1` (tested on PHP 8.1–8.6)
+- **Symfony** `^6.4 || ^7.0 || ^8.0`
+- **jwilsson/spotify-web-api-php** `^6.0 || ^7.0`
+
+---
+
+## 🧪 Development & Testing Guide
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for detailed setup instructions, test suite commands, static analysis, and contribution guidelines.
+
+---
 
 ## 🤝 Contributing
 
-Implemented a missing feature? You can request it. And creating a pull request is an even better way to get things done.
+Contributions are welcome! Please ensure that all tests pass and coding standards are maintained:
+
+```bash
+composer cs-fix
+composer analyse
+composer test-all
+```
 
 ---
 
-## 🏁 Quick Start
+## 📄 License
 
-1. Install the bundle with Composer
-2. Configure your Spotify credentials
-3. Autowire the service and start using the API!
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
-## 💬 Support
+---
 
-For questions or help, feel free to open an issue or reach out! 😊
+## ⚖️ Disclaimer
+
+Spotify is a registered trademark of Spotify AB. This project is an independent, unofficial open-source bundle and is not affiliated with, endorsed by, or sponsored by Spotify AB.
+
+---
+
+## 🙏 Acknowledgments
+
+- [jwilsson/spotify-web-api-php](https://github.com/jwilsson/spotify-web-api-php) for the underlying Spotify Web API client.
+- [Symfony](https://symfony.com) for the web framework and dependency injection container.
+- Sister Symfony bundles:
+  - [`calliostro/discogs-bundle`](https://github.com/calliostro/discogs-bundle) – Symfony bundle for the Discogs API.
+  - [`calliostro/lastfm-bundle`](https://github.com/calliostro/last-fm-client-bundle) – Symfony bundle for the Last.fm API.
+  - [`calliostro/musicbrainz-bundle`](https://github.com/calliostro/musicbrainz-bundle) – Symfony bundle for the MusicBrainz API.
+  - [`calliostro/spotify-bundle`](https://github.com/calliostro/spotify-bundle) – Lightweight Symfony bundle for [`calliostro/spotify-client`](https://github.com/calliostro/spotify-client).

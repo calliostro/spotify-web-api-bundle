@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Calliostro\SpotifyWebApiBundle;
 
 use SpotifyWebAPI\Session;
 
 final class TokenProvider implements TokenProviderInterface
 {
-    private $session;
+    private Session $session;
 
     public function __construct(Session $session)
     {
