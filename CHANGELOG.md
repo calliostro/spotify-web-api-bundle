@@ -9,12 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added `Calliostro\SpotifyWebApiBundle\SpotifyClient` subclassing `SpotifyWebAPI\SpotifyWebAPI` with automatic token freshness checking and retry handling on expired token errors (`401`).
+- Added in-memory token caching with timestamp tracking (55-minute TTL) and force-refresh capabilities to `TokenProvider`.
+- Solved token expiration after 60 minutes for long-running processes (CLI commands and Symfony Messenger background workers).
+- Added `SpotifyClientFactory` with runtime credential validation (`client_id`, `client_secret`) and actionable configuration error instructions.
+- Added `tests/Fixtures/TestKernel.php` for clean, isolated testing.
+- Created `UPGRADE.md` guide.
+- Added comprehensive unit test suite in `tests/Unit/` reaching 100% code coverage across all classes, methods, and lines.
 - Compatibility testing and CI matrix coverage for PHP 8.1–8.6 and Symfony 6.4 LTS, 7.x, 8.0, 8.1, and 8.2.
 - Created root `phpstan.neon.dist` (Level 8) and added PHPStan static analysis.
 - Created `.php-cs-fixer.dist.php` for PSR-12 and PSR-12:risky code styling.
-- Added comprehensive unit test suite in `tests/Unit/` reaching 100% code coverage across all classes, methods, and lines.
-- Added `DEVELOPMENT.md` guide and Keep a Changelog `CHANGELOG.md`.
+- Added `DEVELOPMENT.md` guide.
 - Added `.gitattributes` for clean release archives and updated `.gitignore`.
+
+### Deprecated
+
+- Deprecated `SpotifyWebApiFactory` in favor of `SpotifyClientFactory`.
+- Deprecated `calliostro_spotify_web_api` service alias in favor of `calliostro_spotify_web_api.client`.
+- Deprecated `SpotifyWebAPI\SpotifyWebAPI` autowiring alias in favor of `Calliostro\SpotifyWebApiBundle\SpotifyClient`.
 
 ### Changed
 

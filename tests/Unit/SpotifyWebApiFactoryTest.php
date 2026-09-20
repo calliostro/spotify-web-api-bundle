@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Calliostro\SpotifyWebApiBundle\Tests\Unit;
 
+use Calliostro\SpotifyWebApiBundle\SpotifyClient;
 use Calliostro\SpotifyWebApiBundle\SpotifyWebApiFactory;
 use Calliostro\SpotifyWebApiBundle\TokenProviderInterface;
 use PHPUnit\Framework\TestCase;
@@ -26,6 +27,7 @@ final class SpotifyWebApiFactoryTest extends TestCase
         $client = SpotifyWebApiFactory::factory($tokenProvider, $options);
 
         $this->assertInstanceOf(SpotifyWebAPI::class, $client);
+        $this->assertInstanceOf(SpotifyClient::class, $client);
 
         $reflection = new \ReflectionClass($client);
         $accessTokenProp = $reflection->getProperty('accessToken');

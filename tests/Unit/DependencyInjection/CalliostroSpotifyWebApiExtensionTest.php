@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Calliostro\SpotifyWebApiBundle\Tests\Unit\DependencyInjection;
 
 use Calliostro\SpotifyWebApiBundle\DependencyInjection\CalliostroSpotifyWebApiExtension;
+use Calliostro\SpotifyWebApiBundle\SpotifyClient;
+use Calliostro\SpotifyWebApiBundle\TokenProviderInterface;
 use PHPUnit\Framework\TestCase;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
@@ -22,10 +24,14 @@ final class CalliostroSpotifyWebApiExtensionTest extends TestCase
 
         $this->assertTrue($container->hasDefinition('calliostro_spotify_web_api.session'));
         $this->assertTrue($container->hasDefinition('calliostro_spotify_web_api.token_provider'));
-        $this->assertTrue($container->hasDefinition('calliostro_spotify_web_api'));
+        $this->assertTrue($container->hasDefinition('calliostro_spotify_web_api.client_factory'));
+        $this->assertTrue($container->hasDefinition('calliostro_spotify_web_api.client'));
 
         $this->assertTrue($container->hasAlias(Session::class));
+        $this->assertTrue($container->hasAlias(SpotifyClient::class));
         $this->assertTrue($container->hasAlias(SpotifyWebAPI::class));
+        $this->assertTrue($container->hasAlias(TokenProviderInterface::class));
+        $this->assertTrue($container->hasAlias('calliostro_spotify_web_api'));
 
         $sessionDef = $container->getDefinition('calliostro_spotify_web_api.session');
         $this->assertSame(['', '', ''], $sessionDef->getArguments());
@@ -33,15 +39,19 @@ final class CalliostroSpotifyWebApiExtensionTest extends TestCase
         $tokenProviderDef = $container->getDefinition('calliostro_spotify_web_api.token_provider');
         $this->assertEquals([new Reference('calliostro_spotify_web_api.session')], $tokenProviderDef->getArguments());
 
-        $apiDef = $container->getDefinition('calliostro_spotify_web_api');
+        $clientDef = $container->getDefinition('calliostro_spotify_web_api.client');
         $this->assertEquals([
+            '',
+            '',
+            '',
             new Reference('calliostro_spotify_web_api.token_provider'),
             [
                 'auto_refresh' => false,
                 'auto_retry' => false,
                 'return_assoc' => false,
             ],
-        ], $apiDef->getArguments());
+            new Reference('calliostro_spotify_web_api.session'),
+        ], $clientDef->getArguments());
     }
 
     public function testLoadWithCustomConfig(): void
@@ -51,8 +61,8 @@ final class CalliostroSpotifyWebApiExtensionTest extends TestCase
 
         $configs = [
             [
-                'client_id' => 'custom_id',
-                'client_secret' => 'custom_secret',
+                'client_id' => 'custom_id_12345',
+                'client_secret' => 'custom_secret_12345',
                 'redirect_uri' => 'https://example.com/callback',
                 'token_provider' => 'my_custom_provider',
                 'options' => [
@@ -66,16 +76,20 @@ final class CalliostroSpotifyWebApiExtensionTest extends TestCase
         $extension->load($configs, $container);
 
         $sessionDef = $container->getDefinition('calliostro_spotify_web_api.session');
-        $this->assertSame(['custom_id', 'custom_secret', 'https://example.com/callback'], $sessionDef->getArguments());
+        $this->assertSame(['custom_id_12345', 'custom_secret_12345', 'https://example.com/callback'], $sessionDef->getArguments());
 
-        $apiDef = $container->getDefinition('calliostro_spotify_web_api');
+        $clientDef = $container->getDefinition('calliostro_spotify_web_api.client');
         $this->assertEquals([
+            'custom_id_12345',
+            'custom_secret_12345',
+            'https://example.com/callback',
             new Reference('my_custom_provider'),
             [
                 'auto_refresh' => true,
                 'auto_retry' => true,
                 'return_assoc' => true,
             ],
-        ], $apiDef->getArguments());
+            new Reference('calliostro_spotify_web_api.session'),
+        ], $clientDef->getArguments());
     }
 }

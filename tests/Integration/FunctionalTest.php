@@ -4,66 +4,54 @@ declare(strict_types=1);
 
 namespace Calliostro\SpotifyWebApiBundle\Tests\Integration;
 
-use Calliostro\SpotifyWebApiBundle\CalliostroSpotifyWebApiBundle;
+use Calliostro\SpotifyWebApiBundle\SpotifyClient;
+use Calliostro\SpotifyWebApiBundle\Tests\Fixtures\TestKernel;
 use Calliostro\SpotifyWebApiBundle\TokenProviderInterface;
 use PHPUnit\Framework\TestCase;
+use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
-use Symfony\Component\HttpKernel\Kernel;
 
 final class FunctionalTest extends TestCase
 {
     public function testServiceWiring(): void
     {
-        $kernel = new CalliostroSpotifyWebApiTestingKernel([
-            'client_id' => 'some client ID',
-            'client_secret' => 'some client secret',
+        $kernel = new FunctionalTestKernel([
+            'client_id' => 'valid_client_id_123',
+            'client_secret' => 'valid_client_secret_123',
             'token_provider' => 'fake_token_provider',
         ]);
         $kernel->boot();
         $container = $kernel->getContainer();
 
-        $spotifyWebApi = $container->get('calliostro_spotify_web_api');
-        $this->assertInstanceOf(SpotifyWebAPI::class, $spotifyWebApi);
+        $clientByOldId = $container->get('calliostro_spotify_web_api');
+        $this->assertInstanceOf(SpotifyClient::class, $clientByOldId);
+        $this->assertInstanceOf(SpotifyWebAPI::class, $clientByOldId);
+
+        $clientByNewId = $container->get('calliostro_spotify_web_api.client');
+        $this->assertSame($clientByOldId, $clientByNewId);
+
+        $session = $container->get('calliostro_spotify_web_api.session');
+        $this->assertInstanceOf(Session::class, $session);
     }
 }
 
-class CalliostroSpotifyWebApiTestingKernel extends Kernel
+class FunctionalTestKernel extends TestKernel
 {
-    /**
-     * @param array<string, mixed> $calliostroSpotifyWebApiConfig
-     */
-    public function __construct(private readonly array $calliostroSpotifyWebApiConfig = [])
-    {
-        parent::__construct('test', true);
-    }
-
-    public function registerBundles(): array
-    {
-        return [
-            new CalliostroSpotifyWebApiBundle(),
-        ];
-    }
-
     public function registerContainerConfiguration(LoaderInterface $loader): void
     {
+        parent::registerContainerConfiguration($loader);
+
         $loader->load(function (ContainerBuilder $container) {
             $container->register('fake_token_provider', FakeTokenProvider::class);
-
-            $container->loadFromExtension('calliostro_spotify_web_api', $this->calliostroSpotifyWebApiConfig);
         });
-    }
-
-    public function getCacheDir(): string
-    {
-        return $this->getProjectDir() . '/var/cache/' . $this->environment . '/' . spl_object_hash($this);
     }
 }
 
 class FakeTokenProvider implements TokenProviderInterface
 {
-    public function getAccessToken(): string
+    public function getAccessToken(bool $forceRefresh = false): string
     {
         return 'some access token';
     }

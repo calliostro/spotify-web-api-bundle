@@ -9,7 +9,7 @@
 [![PHPStan Level](https://img.shields.io/badge/PHPStan-level%208-brightgreen.svg)](https://phpstan.org/)
 [![Code Style](https://img.shields.io/badge/code%20style-PSR12-brightgreen.svg)](https://github.com/FriendsOfPHP/PHP-CS-Fixer)
 
-A Symfony bundle integrating [`jwilsson/spotify-web-api-php`](https://github.com/jwilsson/spotify-web-api-php) into your Symfony application. Provides dependency injection, autowiring, customizable token management, and support for Client Credentials & Authorization Code flows for PHP 8.1+ and Symfony 6.4, 7.x, and 8.x.
+A resilient Symfony bundle integrating [`jwilsson/spotify-web-api-php`](https://github.com/jwilsson/spotify-web-api-php) into your Symfony application. Features automated token management for long-running CLI commands and Symfony Messenger background workers, dependency injection, autowiring, and support for Client Credentials & Authorization Code flows on PHP 8.1+ and Symfony 6.4, 7.x, and 8.x.
 
 ## 📦 Installation
 
@@ -57,38 +57,41 @@ calliostro_spotify_web_api:
 
 ### 1. Client Credentials Flow (Machine-to-Machine)
 
-For public data endpoints (searching tracks, getting artist info, browsing playlists), inject `SpotifyWebAPI` directly into your controllers or services. The built-in token provider automatically requests a Client Credentials token:
+For public data endpoints (searching tracks, getting artist info, browsing playlists), inject `SpotifyClient` directly into your controllers, services, or console commands:
 
 ```php
 <?php
 
 namespace App\Controller;
 
-use SpotifyWebAPI\SpotifyWebAPI;
+use Calliostro\SpotifyWebApiBundle\SpotifyClient;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 final class MusicController
 {
-    public function search(SpotifyWebAPI $api): JsonResponse
+    public function search(SpotifyClient $spotify): JsonResponse
     {
-        $results = $api->search('Billie Eilish', 'artist');
+        $results = $spotify->search('Billie Eilish', 'artist');
 
         return new JsonResponse($results);
     }
 }
 ```
 
+> [!TIP]
+> Type-hinting `Calliostro\SpotifyWebApiBundle\SpotifyClient` is recommended. It extends `SpotifyWebAPI\SpotifyWebAPI`, ensuring full backward compatibility while providing automated token freshness checks and retry handling for long-running processes.
+
 ### 2. Authorization Code Flow (User Data)
 
-To access private user data (playlists, saved tracks, top artists), inject both `SpotifyWebAPI` and `Session`:
+To access private user data (playlists, saved tracks, top artists), inject both `SpotifyClient` and `Session`:
 
 ```php
 <?php
 
 namespace App\Controller;
 
+use Calliostro\SpotifyWebApiBundle\SpotifyClient;
 use SpotifyWebAPI\Session;
-use SpotifyWebAPI\SpotifyWebAPI;
 use SpotifyWebAPI\SpotifyWebAPIAuthException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -99,7 +102,7 @@ use Symfony\Component\Routing\Annotation\Route;
 final class SpotifyController extends AbstractController
 {
     public function __construct(
-        private readonly SpotifyWebAPI $api,
+        private readonly SpotifyClient $spotify,
         private readonly Session $session,
     ) {
     }
@@ -129,8 +132,8 @@ final class SpotifyController extends AbstractController
             return $this->redirectToRoute('spotify_authorize');
         }
 
-        $this->api->setAccessToken($this->session->getAccessToken());
-        $user = $this->api->me();
+        $this->spotify->setAccessToken($this->session->getAccessToken());
+        $user = $this->spotify->me();
 
         return new Response(sprintf('<h1>Hello, %s!</h1>', htmlspecialchars($user->display_name ?? 'Spotify User')));
     }
@@ -139,11 +142,26 @@ final class SpotifyController extends AbstractController
 
 ---
 
+## ⚡ Long-Running Processes (CLI & Messenger Workers)
+
+Spotify OAuth access tokens expire strictly after 3,600 seconds (1 hour). In standard setups, long-running CLI commands or Symfony Messenger background workers (`bin/console messenger:consume`) crash with a `401 Expired Token` error after 60 minutes.
+
+This bundle solves this problem automatically out of the box:
+1. **In-Memory Caching:** `TokenProvider` caches the access token in memory with an automatic freshness threshold (55 minutes).
+2. **Pre-emptive Refresh:** Before any API call is sent, `SpotifyClient` ensures the token is still valid and refreshes it transparently if needed.
+3. **Self-Healing Retries:** If Spotify returns an expired token exception, `SpotifyClient` catches it, forces a token refresh, and retries the request once before failing.
+
+Your workers and daemon commands can run for days without interruption or manual token management.
+
+---
+
 ## ✨ Key Features
 
-- **Seamless Autowiring** – Type-hint `SpotifyWebAPI` and `Session` directly in your services and controllers.
-- **Dual Flow Support** – Ready out of the box for both Client Credentials and Authorization Code flows.
-- **Custom Token Providers** – Implement `TokenProviderInterface` to plug in your own token storage (Redis, database, session).
+- **Resilient `SpotifyClient`** – Extends `SpotifyWebAPI` with transparent token refresh and self-healing retries.
+- **Daemon & CLI Ready** – Runs indefinitely in Symfony Messenger workers and console commands without 60-minute token expiration crashes.
+- **Runtime Credential Validation** – Clear, actionable error messages pointing to your Spotify dashboard when credentials are missing.
+- **Seamless Autowiring** – Type-hint `SpotifyClient` (recommended) or `SpotifyWebAPI` (deprecated alias) and `Session`.
+- **Dual Flow Support** – Out-of-the-box support for both Client Credentials and Authorization Code flows.
 - **Client Options** – Easily toggle `auto_refresh`, `auto_retry`, and `return_assoc` via YAML configuration.
 - **Type Safety & IDE Support** – PHP 8.1+ types, strict types, and PHPStan Level 8 static analysis.
 - **Symfony Native** – Full compatibility with Symfony 6.4 LTS, 7.x, and 8.x.
@@ -195,5 +213,5 @@ Spotify is a registered trademark of Spotify AB. This project is an independent,
 - Sister Symfony bundles:
   - [`calliostro/discogs-bundle`](https://github.com/calliostro/discogs-bundle) – Symfony bundle for the Discogs API.
   - [`calliostro/lastfm-bundle`](https://github.com/calliostro/last-fm-client-bundle) – Symfony bundle for the Last.fm API.
-  - [`calliostro/musicbrainz-bundle`](https://github.com/calliostro/musicbrainz-bundle) – Symfony bundle for the MusicBrainz API.
   - [`calliostro/spotify-bundle`](https://github.com/calliostro/spotify-bundle) – Lightweight Symfony bundle for [`calliostro/spotify-client`](https://github.com/calliostro/spotify-client).
+  - [`calliostro/musicbrainz-bundle`](https://github.com/calliostro/musicbrainz-bundle) – Symfony bundle for the MusicBrainz API.
