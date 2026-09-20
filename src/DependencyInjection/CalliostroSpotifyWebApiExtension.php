@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Calliostro\SpotifyWebApiBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
@@ -15,10 +17,9 @@ final class CalliostroSpotifyWebApiExtension extends Extension
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
         $loader->load('services.php');
 
-        $configuration = $this->getConfiguration($configs, $container);
+        $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
-        // Set arguments instead of replacing them since services.php doesn't define them
         $container->getDefinition('calliostro_spotify_web_api.session')
             ->setArguments([
                 $config['client_id'],
@@ -31,10 +32,14 @@ final class CalliostroSpotifyWebApiExtension extends Extension
                 new Reference('calliostro_spotify_web_api.session'),
             ]);
 
-        $container->getDefinition('calliostro_spotify_web_api')
+        $container->getDefinition('calliostro_spotify_web_api.client')
             ->setArguments([
+                $config['client_id'],
+                $config['client_secret'],
+                $config['redirect_uri'],
                 new Reference($config['token_provider']),
                 $config['options'],
+                new Reference('calliostro_spotify_web_api.session'),
             ]);
     }
 }

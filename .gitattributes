@@ -1,0 +1,33 @@
+# Normalize line endings
+* text=auto
+
+# PHP files
+*.php text eol=lf diff=php
+
+# Config files
+*.json text eol=lf
+*.md text eol=lf
+*.neon text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+# Exclude from releases
+.editorconfig export-ignore
+.gitattributes export-ignore
+.github/ export-ignore
+.gitignore export-ignore
+.markdownlint.json export-ignore
+.php-cs-fixer.* export-ignore
+.phpstan/ export-ignore
+.phpunit.* export-ignore
+codecov.yml export-ignore
+coverage/ export-ignore
+coverage.clover export-ignore
+coverage.xml export-ignore
+DEVELOPMENT.md export-ignore
+phpstan.neon.dist export-ignore
+phpunit.xml* export-ignore
+tests/ export-ignore
+var/ export-ignore
+vendor/ export-ignore
